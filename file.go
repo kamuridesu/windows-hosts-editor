@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -8,8 +9,6 @@ import (
 
 	"golang.org/x/sys/windows"
 )
-
-const FileLocation = `C:\Windows\System32\drivers\etc\hosts`
 
 func isAdmin() bool {
 	_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
@@ -38,14 +37,26 @@ func runAsAdmin() {
 	}
 }
 
-func OpenHostsFile() string {
-	data, err := os.ReadFile(FileLocation)
+func OpenFile(filename string) string {
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		panic(err)
 	}
 	return string(data)
 }
 
-func SaveHostsFile(content string) {
-	os.WriteFile(FileLocation, []byte(content), os.ModeAppend)
+func SaveFile(filename, content string) {
+	if err := os.WriteFile(filename, []byte(content), os.ModeAppend); err != nil {
+		panic(err)
+	}
+}
+
+func CheckAndCreateTempFile() {
+	if _, err := os.Stat(TempFileLocation); err == nil {
+		SaveFile(TempFileLocation, "")
+	} else if errors.Is(err, os.ErrNotExist) {
+		os.WriteFile(TempFileLocation, []byte(""), 0644)
+	} else {
+		panic(err)
+	}
 }
