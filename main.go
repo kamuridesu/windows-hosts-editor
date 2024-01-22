@@ -11,7 +11,7 @@ import (
 var (
 	iPeeAdress       string
 	domainName       string
-	editMode         bool
+	editMode         *bool
 	TempFileLocation string
 )
 
@@ -20,13 +20,13 @@ const HostsFileLocation = `C:\Windows\System32\drivers\etc\hosts`
 func init() {
 	TempFileLocation, _ = os.UserHomeDir()
 	TempFileLocation += `\AppData\Local\Temp\hosts.edit.tmp`
-	editMode = *flag.Bool("edit", true, "Edit mode, opens Notepad to edit hosts file")
+	editMode = flag.Bool("edit", false, "Edit mode, opens Notepad to edit hosts file")
 	if !isAdmin() {
 		runAsAdmin()
 	}
 	flag.Parse()
 	args := flag.Args()
-	if editMode {
+	if *editMode {
 		CheckAndCreateTempFile()
 		return
 	}
@@ -39,12 +39,13 @@ func init() {
 }
 
 func main() {
+	fmt.Println(*editMode)
 	if !isAdmin() {
 		fmt.Println("Need admin permission to modify hosts file")
 		os.Exit(1)
 	}
 	fmt.Println("Running as admin")
-	if !editMode {
+	if !*editMode {
 		CLI()
 		os.Exit(0)
 	}
